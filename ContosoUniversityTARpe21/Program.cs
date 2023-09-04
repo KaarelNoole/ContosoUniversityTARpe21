@@ -4,11 +4,8 @@ using Microsoft.Extensions.DependencyInjection;
 
 public class Program
 {
-    private static void Main(string[] args)
+    public static void Main(string[] args)
     {
-        var host = CreateHostBuilder(args).Build();
-        CreateDbIfNotExists(host);
-        host.Run();
 
         var builder = WebApplication.CreateBuilder(args);
 
@@ -17,8 +14,10 @@ public class Program
         builder.Services.AddDatabaseDeveloperPageExceptionFilter();
         builder.Services.AddDbContext<SchoolContext>(options => options
         .UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
         var app = builder.Build();
+
+        CreateDbIfNotExists(app);
+
 
         // Configure the HTTP request pipeline.
         if (!app.Environment.IsDevelopment())
@@ -35,35 +34,37 @@ public class Program
 
         app.UseAuthorization();
 
-        app.MapControllerRoute(
-            name: "default",
-            pattern: "{controller=Home}/{action=Index}/{id?}");
-
+        app.MapControllerRoute
+            (name: "default",
+            pattern: "{controller=home}/{Action=Index}/{id?}"
+            );
         app.Run();
+
     }
-    
+
     private static void CreateDbIfNotExists(IHost host)
     {
         using (var scope = host.Services.CreateScope())
         {
-        var services = scope.ServiceProvider;
-        try
-        {
-            var context = services.GetRequiredService<
-                SchoolContext>();
-            DbInitializer.Initialize(context);
-        }
-        catch (Exception ex) 
-        {
-            var logger = services.GetRequiredService<ILogger<Program>>();
-            logger.LogError(ex, "An error occured creating the database");
+            var services = scope.ServiceProvider;
+            try
+            {
+                var context = services.GetRequiredService<
+                    SchoolContext>();
+                DbInitializer.Initialize(context);
+            }
+            catch (Exception ex)
+            {
+                var logger = services.GetRequiredService<ILogger<Program>>();
+                logger.LogError(ex, "An error occured creating the database");
+            }
         }
     }
-  }
+
     public static IHostBuilder CreateHostBuilder(string[] args) =>
         Host.CreateDefaultBuilder(args)
-            .ConfigureWebHostDefaults(webBuilder =>
-            {
-                webBuilder.UseStartup<Program>();
-            });
+        .ConfigureWebHostDefaults(webBuilder =>
+        {
+            webBuilder.UseStartup<Program>();
+        });
 }
