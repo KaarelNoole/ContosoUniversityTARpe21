@@ -115,7 +115,7 @@ namespace ContosoUniversityTARpe21.Controllers
             {
                 return NotFound();
             }
-
+            
             if (saveChangesError.GetValueOrDefault())
             {
                 ViewData["ErrorMessage"] =
@@ -130,14 +130,24 @@ namespace ContosoUniversityTARpe21.Controllers
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var student = await _context.Students.FindAsync(id);
-            _context.Students.Remove(student);
-            await _context.SaveChangesAsync();
+            if (student == null)
+            {
             return RedirectToAction(nameof(Index));
-        }
+            }
+            try
+            {
+                _context.Students.Remove(student);
+                await _context.SaveChangesAsync();
+                return RedirectToAction(nameof(Index));
+            }
+            catch (DbUpdateException)
+            {
 
-        private bool StudentExists(int id)
-        {
-            return _context.Students.Any(s=> s.ID == id);
+                return RedirectToAction(nameof(Delete), new {id = id,
+                saveChangesError = true });
+            }
+;
+            
         }
     }
 }
