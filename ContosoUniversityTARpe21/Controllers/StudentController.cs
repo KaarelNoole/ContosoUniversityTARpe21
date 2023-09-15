@@ -59,7 +59,7 @@ namespace ContosoUniversityTARpe21.Controllers
             }
             return View();       
         }
-
+        [HttpGet]
         public async Task<IActionResult> Edit(int? id)
         {
             if(id == null)
