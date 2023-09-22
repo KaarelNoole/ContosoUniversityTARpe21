@@ -93,37 +93,70 @@ namespace ContosoUniversityTARpe21.Controllers
             {
                 return NotFound();
             }
-            var instructor = await _context.Instructors.FindAsync(id);
+            var instructor = await _context.Instructors
+                .Include(i => i.OfficeAssignment)
+                .Include(i => i.CourseAssignments)
+                .ThenInclude(i => i.Course)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(m => m.ID == id);
             if (instructor == null)
             {
                 return NotFound();
             }
+            PopulateAssignedCourseData(instructor);
             return View(instructor);
         }
+
+        private void PopulateAssignedCourseData(Instructor instructor)
+        {
+            throw new NotImplementedException();
+        }
+
         [HttpPost, ActionName("Edit")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> EditPost(int? id)
+        public async Task<IActionResult> EditPost(int? id, string[] selectedCourses)
         {
             if (id == null)
             {
                 return NotFound();
             }
-            var instructorToUpdate = await _context.Instructors.FirstOrDefaultAsync(s => s.ID == id);
-            if (await TryUpdateModelAsync<Instructor>(instructorToUpdate,"",s=>s.FirstMidName,
-                s=>s.LastName, s=>s.HireDate))
+            var instructorToUpdate = await _context.Instructors
+                .Include(i => i.OfficeAssignment)
+                .Include(i => i.CourseAssignments)
+                .ThenInclude(i => i.Course)
+                .FirstOrDefaultAsync(s => s.ID == id);
+            if (await TryUpdateModelAsync<Instructor>(instructorToUpdate, "",
+                i => i.FirstMidName,
+                i => i.LastName,
+                i => i.HireDate,
+                i => i.OfficeAssignment))
             {
+                if (string.IsNullOrWhiteSpace(instructorToUpdate.OfficeAssignment?.Location))
+                {
+                    instructorToUpdate.OfficeAssignment = null;
+                }
+                UpdateInstructorCourses(selectedCourses, instructorToUpdate);
                 try
                 {
                     await _context.SaveChangesAsync();
-                    return RedirectToAction(nameof(Index));
                 }
                 catch (DbUpdateException)
                 {
 
-                    ModelState.AddModelError("", "Unable to save changes. " + "Try again, and if the problem persist" + "see your system administrator");
+                    ModelState.AddModelError("", "Unable to save changes. " +
+                        "Try Again, and if the proble persists, " +
+                        "see your system administrator.");
                 }
+                return RedirectToAction(nameof(Index));
             }
-            return View(instructorToUpdate);
+            UpdateInstructorCourses (selectedCourses, instructorToUpdate);
+            PopulateAssignedCourseData(instructorToUpdate);
+            return View();
+        }
+
+        private void UpdateInstructorCourses(string[] selectedCourses, Instructor instructorToUpdate)
+        {
+            throw new NotImplementedException();
         }
 
         public async Task<IActionResult> Delete(int? id, bool? saveChangerError = false)
