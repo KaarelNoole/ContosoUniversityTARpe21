@@ -19,6 +19,7 @@ namespace ContosoUniversityTARpe21.Models
         public byte RowVersion { get; set; }
         public Instructor Adminstrator { get; set; }
 
+        //
         public ICollection<Course> Courses { get; set; }
     }
 }
