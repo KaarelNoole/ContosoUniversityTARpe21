@@ -15,29 +15,29 @@
                 @Html.DisplayNameFor(model => model.Name)
             </dt>
             <dt class="col-sm-10">
-                @Html.DisplayNameFor(model => model.Name)
+                @Html.DisplayFor(model => model.Name)
             </dt>
         <dt class="col-sm-2">
             @Html.DisplayNameFor(model => model.Budget)
         </dt>
         <dt class="col-sm-10">
-            @Html.DisplayNameFor(model => model.Budget)
+            @Html.DisplayFor(model => model.Budget)
         </dt>
         <dt class="col-sm-2">
             @Html.DisplayNameFor(model => model.StartDate)
         </dt>
         <dt class="col-sm-10">
-            @Html.DisplayNameFor(model => model.StartDate)
+            @Html.DisplayFor(model => model.StartDate)
         </dt>
         <dt class="col-sm-2">
             @Html.DisplayNameFor(model => model.Adminstrator)
         </dt>
         <dt class="col-sm-10">
-            @Html.DisplayNameFor(model => model.Adminstrator)
+            @Html.DisplayFor(model => model.Adminstrator.FullName)
         </dt>
   </dl>
 </div>
 <div>
-    <a asp-action="Edit" asp-route="@Model.DepartmentID">Edit</a>
+    <a asp-action="Edit" asp-route-id="@Model.DepartmentID">Edit</a>
     <a asp-action="Index">Back to List</a>
 </div>

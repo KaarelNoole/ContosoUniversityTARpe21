@@ -6,7 +6,7 @@ namespace ContosoUniversityTARpe21.Data
     {
         public static void Initialize(SchoolContext context)
         {
-            context.Database.EnsureCreated();
+            
 
             if (context.Students.Any())
             {
@@ -21,11 +21,11 @@ namespace ContosoUniversityTARpe21.Data
                 new Student() {FirstMidName="Karl Umberto",LastName="Kats",EnrollmentDate=DateTime.Now},
                 new Student() {FirstMidName="Risto",LastName="Koort",EnrollmentDate=DateTime.Now},
             };
-
-            foreach (Student s in students)
-            { 
-                context.Students.Add(s);
-            }
+            context.Students.AddRange(students);
+            //foreach (Student s in students)
+            //{ 
+            //    context.Students.Add(s);
+            //}
             context.SaveChanges();
 
             var instructors = new Instructor[]
@@ -40,10 +40,11 @@ namespace ContosoUniversityTARpe21.Data
                     "Suprise", HireDate = DateTime.Parse("1995-06-08")},
 
             };
-            foreach (Instructor i in instructors)
-            {
-                context.Instructors.Add(i);
-            }
+            context.Instructors.AddRange(instructors);
+            //foreach (Instructor i in instructors)
+            //{
+            //    context.Instructors.Add(i);
+            //}
             context.SaveChanges();
 
             var departments = new Department[]
@@ -82,10 +83,11 @@ namespace ContosoUniversityTARpe21.Data
                 },
 
             };
-            foreach (Department d in departments)
-            {
-                context.Departments.Add(d);
-            }
+            context.Departments.AddRange(departments);
+            //foreach (Department d in departments)
+            //{
+            //    context.Departments.Add(d);
+            //}
             context.SaveChanges();
 
             var course = new Course[]
@@ -96,11 +98,12 @@ namespace ContosoUniversityTARpe21.Data
                 new Course() {CourseID=6666,Title="Testimine",Credits=160},
                 new Course() {CourseID=1234,Title="Riigikaitse",Credits=160},
             };
+            context.Courses.AddRange(course);
 
-            foreach (Course c in course)
-            {
-                context.Courses.Add(c);
-            }
+            //foreach (Course c in course)
+            //{
+            //    context.Courses.Add(c);
+            //}
             context.SaveChanges();
 
             var officeAssignments = new OfficeAssignment[]
@@ -122,10 +125,11 @@ namespace ContosoUniversityTARpe21.Data
                     Location = "Kaubik kooli ees",
                 },
             };
-            foreach (OfficeAssignment o in officeAssignments)
-            {
-                context.OfficeAssignments.Add(o);
-            }
+            context.OfficeAssignments.AddRange(officeAssignments);
+            //foreach (OfficeAssignment o in officeAssignments)
+            //{
+            //    context.OfficeAssignments.Add(o);
+            //}
             context.SaveChanges();
 
             var courseInstructor = new CourseAssignment[]
@@ -171,10 +175,11 @@ namespace ContosoUniversityTARpe21.Data
                     InstructorID=instructors.Single(i => i.LastName == "Suprise").ID
                 },
             };
-            foreach (CourseAssignment ci in courseInstructor)
-            {
-                context.CourseAssignments.Add(ci);
-            }
+            context.CourseAssignments.AddRange(courseInstructor);
+            //foreach (CourseAssignment ci in courseInstructor)
+            //{
+            //    context.CourseAssignments.Add(ci);
+            //}
             context.SaveChanges();
 
             var enrollments = new Enrollment[]
@@ -200,7 +205,13 @@ namespace ContosoUniversityTARpe21.Data
 
             foreach (Enrollment e in enrollments)
             {
-                context.Enrollments.Add(e);
+                var enrollmentInDatabase = context.Enrollments.Where(
+                    s => s.StudentID == e.StudentID &&
+                    s.CourseID == e.CourseID).SingleOrDefault();
+                if (enrollmentInDatabase != null)
+                {
+                    context.Enrollments.Add(e);
+                }
             }
             context.SaveChanges();
 

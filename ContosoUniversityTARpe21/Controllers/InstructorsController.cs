@@ -65,26 +65,38 @@ namespace ContosoUniversityTARpe21.Controllers
         }
         public IActionResult Create()
         {
+            var instructor = new Instructor();
+            instructor.CourseAssignments = new List<CourseAssignment>();
+            PopulateAssignedCourseData(instructor);
             return View();
         }
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("HiredDate,FirstMidName,LastName")] Instructor instructor)
+        public async Task<IActionResult> Create([Bind("HiredDate,FirstMidName,LastName,OfficeAssignment")] Instructor instructor, string selectedCourses)
         {
-            try
+            ModelState.Remove("OfficeAssignement.Instructor");
+            if (selectedCourses != null)
             {
-                if (ModelState.IsValid)
+                instructor.CourseAssignments = new List<CourseAssignment>();
+                foreach (var course in selectedCourses)
                 {
-                    _context.Add(instructor);
-                    await _context.SaveChangesAsync();
-                    return RedirectToAction(nameof(Index));
+                    var curseToAdd = new CourseAssignment
+                    {
+                        InstructorID = instructor.ID,
+                        CourseID = Convert.ToInt32(course)
+                    };
+                instructor.CourseAssignments.Add(curseToAdd);
                 }
+                
             }
-            catch (Exception ) 
+            if (ModelState.IsValid)
             {
-                ModelState.AddModelError("", "Unable to save changes. " + "Try again, and if the proble, persist" + "see your system administrator");
+                _context.Add(instructor);
+                await _context.SaveChangesAsync();
+                return RedirectToAction(nameof(Index));
             }
-            return View();
+            PopulateAssignedCourseData(instructor);
+            return View(instructor);
         }
 
         public async Task<IActionResult> Edit(int? id)

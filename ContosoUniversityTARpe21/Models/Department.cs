@@ -16,10 +16,10 @@ namespace ContosoUniversityTARpe21.Models
         public DateTime StartDate { get; set; }
         public int? InstructorID { get; set; }
         [Timestamp]
-        public byte RowVersion { get; set; }
-        public Instructor Adminstrator { get; set; }
+        public byte? RowVersion { get; set; }
+        public Instructor? Adminstrator { get; set; }
 
-        //
-        public ICollection<Course> Courses { get; set; }
+        
+        public ICollection<Course>? Courses { get; set; }
     }
 }
