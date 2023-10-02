@@ -1,6 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿﻿using ContosoUniversityTARpe21.Data;
 using ContosoUniversityTARpe21.Models;
-using ContosoUniversityTARpe21.Data;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace ContosoUniversityTARpe21.Controllers
@@ -8,7 +8,6 @@ namespace ContosoUniversityTARpe21.Controllers
     public class InstructorsController : Controller
     {
         private readonly SchoolContext _context;
-
         public InstructorsController(SchoolContext context)
         {
             _context = context;
@@ -46,48 +45,32 @@ namespace ContosoUniversityTARpe21.Controllers
             }
             return View(vm);
         }
-
-
-        public async Task<IActionResult> Details(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-            var instructor = await _context.Instructors
-                .FirstOrDefaultAsync(m => m.ID == id);
-
-            if (instructor == null)
-            {
-                return NotFound();
-            }
-            return View(instructor);
-        }
+        [HttpGet]
         public IActionResult Create()
         {
             var instructor = new Instructor();
             instructor.CourseAssignments = new List<CourseAssignment>();
             PopulateAssignedCourseData(instructor);
-            return View();
+            return View();    
         }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("HiredDate,FirstMidName,LastName,OfficeAssignment")] Instructor instructor, string selectedCourses)
+        public async Task<IActionResult> Create([Bind("HireDate,FirstMidName,LastName,OfficeAssignment")] Instructor instructor, string[] selectedCourses)
         {
-            ModelState.Remove("OfficeAssignement.Instructor");
+            ModelState.Remove("OfficeAssignment.Instructor");
             if (selectedCourses != null)
             {
                 instructor.CourseAssignments = new List<CourseAssignment>();
                 foreach (var course in selectedCourses)
                 {
-                    var curseToAdd = new CourseAssignment
+                    var courseToAdd = new CourseAssignment
                     {
                         InstructorID = instructor.ID,
-                        CourseID = Convert.ToInt32(course)
+                        CourseID = int.Parse(course)
                     };
-                instructor.CourseAssignments.Add(curseToAdd);
+                instructor.CourseAssignments.Add(courseToAdd);
                 }
-                
             }
             if (ModelState.IsValid)
             {
@@ -99,6 +82,20 @@ namespace ContosoUniversityTARpe21.Controllers
             return View(instructor);
         }
 
+        public async Task<IActionResult> Details(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+            var instructor = await _context.Instructors.FirstOrDefaultAsync(m => m.ID == id);
+            if (instructor == null)
+            {
+                return NotFound();
+            }
+            return View(instructor);
+        }
+        [HttpGet]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -118,6 +115,113 @@ namespace ContosoUniversityTARpe21.Controllers
             PopulateAssignedCourseData(instructor);
             return View(instructor);
         }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int? id, string[] selectedCourses)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+            var instructorToUpdate = await _context.Instructors
+                .Include(i => i.OfficeAssignment)
+                .Include(i => i.CourseAssignments)
+                .ThenInclude(i => i.Course)
+                .FirstOrDefaultAsync(s => s.ID == id);
+            var tryUpdate = await TryUpdateModelAsync<Instructor>(instructorToUpdate, "",
+                i => i.FirstMidName,
+                i => i.LastName,
+                i => i.HireDate,
+                i => i.OfficeAssignment);
+            if (! tryUpdate)
+            {
+                if (string.IsNullOrWhiteSpace(instructorToUpdate.OfficeAssignment?.Location))
+                {
+                    instructorToUpdate.OfficeAssignment = null;
+                }
+                UpdateInstructorCourses(selectedCourses, instructorToUpdate);
+                try
+                {
+                    await _context.SaveChangesAsync();
+                }
+                catch (DbUpdateException)
+                {
+                    ModelState.AddModelError("", "Unable to save changes. " +
+                            "Try Again, and if the problem persists, " +
+                            "see your system administrator.");
+                }
+                return RedirectToAction(nameof(Index));
+            }
+            UpdateInstructorCourses(selectedCourses, instructorToUpdate);
+            PopulateAssignedCourseData(instructorToUpdate);
+
+            return View();
+
+        }
+        [HttpGet]
+        public async Task<IActionResult> Delete(int? id, bool? saveChangesError = false)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+            var instructor = await _context.Instructors
+                .FirstOrDefaultAsync(s => s.ID == id);
+            if (instructor == null)
+            {
+                return NotFound();
+            }
+
+            return View(instructor);
+        }
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int id)
+        {
+            Instructor instructor = await _context.Instructors
+                .Include(i => i.CourseAssignments)
+                .SingleAsync(i => i.ID == id);
+
+           var departments = await _context.Departments
+                .Where(d => d.InstructorID == id)
+                .ToListAsync();
+            departments.ForEach(d => d.InstructorID = null);
+
+            _context.Instructors.Remove(instructor);
+
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
+
+        }
+        private void UpdateInstructorCourses(string[] selectedCourses, Instructor instructorToUpdate)
+        {
+            if (selectedCourses == null)
+            {
+                instructorToUpdate.CourseAssignments = new List<CourseAssignment>();
+                return;
+            }
+            var selectedCoursesHS = new HashSet<string>(selectedCourses);
+            var instructorCourses = new HashSet<int>(instructorToUpdate.CourseAssignments.Select(c => c.CourseID));
+            foreach (var course in _context.Courses)
+            {
+                if (selectedCoursesHS.Contains(course.CourseID.ToString()))
+                {
+                    if (!instructorCourses.Contains(course.CourseID))
+                    {
+                        instructorToUpdate.CourseAssignments.Add(new CourseAssignment { InstructorID = instructorToUpdate.ID, CourseID = course.CourseID });
+                    }
+                    else
+                    {
+                        if (instructorCourses.Contains(course.CourseID))
+                        {
+                            CourseAssignment courseToRemove = instructorToUpdate.CourseAssignments
+                                .FirstOrDefault(c => c.CourseID == course.CourseID);
+                            _context.Remove(courseToRemove);
+                        }
+                    }
+                }
+            }
+        }
 
         private void PopulateAssignedCourseData(Instructor instructor)
         {
@@ -135,127 +239,5 @@ namespace ContosoUniversityTARpe21.Controllers
             }
             ViewData["Courses"] = vm;
         }
-
-        [HttpPost, ActionName("Edit")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> EditPost(int? id, string[] selectedCourses)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-            var instructorToUpdate = await _context.Instructors
-                .Include(i => i.OfficeAssignment)
-                .Include(i => i.CourseAssignments)
-                .ThenInclude(i => i.Course)
-                .FirstOrDefaultAsync(s => s.ID == id);
-            if (await TryUpdateModelAsync<Instructor>(instructorToUpdate, "",
-                i => i.FirstMidName,
-                i => i.LastName,
-                i => i.HireDate,
-                i => i.OfficeAssignment))
-            {
-                if (string.IsNullOrWhiteSpace(instructorToUpdate.OfficeAssignment?.Location))
-                {
-                    instructorToUpdate.OfficeAssignment = null;
-                }
-                UpdateInstructorCourses(selectedCourses, instructorToUpdate);
-                try
-                {
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateException)
-                {
-
-                    ModelState.AddModelError("", "Unable to save changes. " +
-                        "Try Again, and if the proble persists, " +
-                        "see your system administrator.");
-                }
-                return RedirectToAction(nameof(Index));
-            }
-            UpdateInstructorCourses (selectedCourses, instructorToUpdate);
-            PopulateAssignedCourseData(instructorToUpdate);
-            return View();
-        }
-
-        private void UpdateInstructorCourses(string[] selectedCourses, Instructor instructorToUpdate)
-        {
-            if (selectedCourses == null)
-            {
-                instructorToUpdate.CourseAssignments = new List<CourseAssignment>();
-                return;
-            }
-            var selectedCoursesHS = new HashSet<string>(selectedCourses);
-            var instructorCourses = new HashSet<int>(instructorToUpdate.CourseAssignments.Select(c =>
-            c.CourseID));
-            foreach (var course in _context.Courses)
-            {
-                if (selectedCourses.Contains(course.CourseID.ToString()))
-                {
-                    if (!instructorCourses.Contains(course.CourseID))
-                    {
-                        instructorToUpdate.CourseAssignments.Add(new CourseAssignment
-                        {
-                            InstructorID =
-                            instructorToUpdate.ID,
-                            CourseID = course.CourseID
-                        });
-                    }
-                    else
-                    {
-                        if (instructorCourses.Contains(course.CourseID))
-                        {
-                            CourseAssignment courseToRemove = instructorToUpdate.CourseAssignments
-                                .FirstOrDefault(c => c.CourseID == course.CourseID);
-                            _context.Remove(courseToRemove);
-                        }
-                    }
-                }
-            }
-        }
-
-        public async Task<IActionResult> Delete(int? id, bool? saveChangerError = false)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var instructor = _context.Instructors
-                .AsNoTracking()
-                .FirstOrDefaultAsync(s => s.ID == id);
-
-            if (instructor == null)
-            {
-                return NotFound();
-            }
-
-            if (saveChangerError.GetValueOrDefault())
-            {
-                ViewData["ErrorMessage"] =
-                    "Deletion has failed, Please try again, and if problem persists " +
-                    "see your system administrator.";
-            }
-            return View(instructor);
-        }
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int? id)
-        {
-            Instructor instructor = await _context.Instructors
-                .Include(i => i.CourseAssignments)
-                .SingleAsync(i => i.ID == id);
-            var departments = await _context.Departments
-                .Where(d => d.InstructorID == id)
-                .ToListAsync();
-            departments.ForEach(d => d.InstructorID = null);
-
-            _context.Instructors.Remove(instructor);
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
-            
-                
-        }
-
     }
 }

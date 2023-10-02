@@ -92,18 +92,18 @@ namespace ContosoUniversityTARpe21.Data
 
             var course = new Course[]
             {
-                new Course() {CourseID=1050,Title="Programmeerimine",Credits=160},
-                new Course() {CourseID=6900,Title="Keemia",Credits=160},
-                new Course() {CourseID=1420,Title="Matemaatika",Credits=160},
-                new Course() {CourseID=6666,Title="Testimine",Credits=160},
-                new Course() {CourseID=1234,Title="Riigikaitse",Credits=160},
+                new Course() {CourseID=1050,Title="Programmeerimine",Credits=160, DepartmentID = departments.Single(s => s.Name == "Infotechnology").DepartmentID},
+                new Course() {CourseID=6900,Title="Keemia",Credits=160, DepartmentID = departments.Single(s => s.Name == "Kokandus").DepartmentID},
+                new Course() {CourseID=1420,Title="Matemaatika",Credits=160, DepartmentID = departments.Single(s => s.Name == "Joomarlus").DepartmentID},
+                new Course() {CourseID=6666,Title="Testimine",Credits=160, DepartmentID = departments.Single(s => s.Name == "Infotechnology").DepartmentID},
+                new Course() {CourseID=1234,Title="Riigikaitse",Credits=160, DepartmentID = departments.Single(s => s.Name == "Internet trolling && Tiktik 101").DepartmentID},
             };
-            context.Courses.AddRange(course);
+            //context.Courses.AddRange(course);
 
-            //foreach (Course c in course)
-            //{
-            //    context.Courses.Add(c);
-            //}
+            foreach (Course c in course)
+            {
+                context.Courses.Add(c);
+            }
             context.SaveChanges();
 
             var officeAssignments = new OfficeAssignment[]

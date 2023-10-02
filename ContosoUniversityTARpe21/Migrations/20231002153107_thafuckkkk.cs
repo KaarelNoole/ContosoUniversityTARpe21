@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace ContosoUniversityTARpe21.Migrations
 {
-    public partial class init1509 : Migration
+    public partial class thafuckkkk : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -49,7 +49,7 @@ namespace ContosoUniversityTARpe21.Migrations
                     Budget = table.Column<decimal>(type: "Money", nullable: false),
                     StartDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     InstructorID = table.Column<int>(type: "int", nullable: true),
-                    RowVersion = table.Column<byte>(type: "tinyint", rowVersion: true, nullable: false)
+                    RowVersion = table.Column<byte>(type: "tinyint", rowVersion: true, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -86,7 +86,7 @@ namespace ContosoUniversityTARpe21.Migrations
                     CourseID = table.Column<int>(type: "int", nullable: false),
                     Title = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Credits = table.Column<int>(type: "int", nullable: false),
-                    DepartmentID = table.Column<int>(type: "int", nullable: true)
+                    DepartmentID = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -95,7 +95,8 @@ namespace ContosoUniversityTARpe21.Migrations
                         name: "FK_Course_Department_DepartmentID",
                         column: x => x.DepartmentID,
                         principalTable: "Department",
-                        principalColumn: "DepartmentID");
+                        principalColumn: "DepartmentID",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(

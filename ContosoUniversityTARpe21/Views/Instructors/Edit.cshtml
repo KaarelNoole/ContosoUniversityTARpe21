@@ -1,13 +1,11 @@
 ﻿@model ContosoUniversityTARpe21.Models.Instructor
-
 @{
     ViewData["Title"] = "Edit";
 }
 
 <h1>Edit</h1>
-
 <h4>Instructor</h4>
-<hr />
+<hr/>
 <div class="row">
     <div class="col-md-4">
         <form asp-action="Edit">
@@ -33,14 +31,12 @@
                 <input asp-for="OfficeAssignment.Location" class="form-control" />
                 <span asp-validation-for="OfficeAssignment.Location" class="text-danger"></span>
             </div>
-
             <div class="form-group">
                 <table>
                     <tr>
                         @{
                             int cnt = 0;
-                            List<ContosoUniversityTARpe21.Models.AssignedCourseData> courses =
-                            ViewBag.Courses;
+                            List<ContosoUniversityTARpe21.Models.AssignedCourseData> courses = ViewBag.Courses;
 
                             foreach (var course in courses)
                             {
@@ -55,20 +51,17 @@
                                 @(Html.Raw(course.Assigned ? "checked=\"checked\"" : ""))/>
                                 @course.CourseID @: course.Title
                                 @:</td>
-
                             }
                         }
                     </tr>
                 </table>
             </div>
             <div class="form-group">
-                <input type="submit" value="save" class="btn btn-primary" />
+                <input type="submit" value="Save" class="btn btn-primary"/>
             </div>
-
         </form>
     </div>
 </div>
-
 <div>
     <a asp-action="Index">Back to List</a>
 </div>
