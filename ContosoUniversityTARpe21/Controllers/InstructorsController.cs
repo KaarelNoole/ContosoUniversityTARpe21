@@ -123,19 +123,19 @@ namespace ContosoUniversityTARpe21.Controllers
             {
                 return NotFound();
             }
+
             var instructorToUpdate = await _context.Instructors
                 .Include(i => i.OfficeAssignment)
                 .Include(i => i.CourseAssignments)
-                .ThenInclude(i => i.Course)
-                .FirstOrDefaultAsync(s => s.ID == id);
-            var tryUpdate = await TryUpdateModelAsync<Instructor>(instructorToUpdate, "",
-                i => i.FirstMidName,
-                i => i.LastName,
-                i => i.HireDate,
-                i => i.OfficeAssignment);
-            if (! tryUpdate)
+                    .ThenInclude(i => i.Course)
+                .FirstOrDefaultAsync(m => m.ID == id);
+
+            if (await TryUpdateModelAsync<Instructor>(
+                instructorToUpdate,
+                "",
+                i => i.FirstMidName, i => i.LastName, i => i.HireDate, i => i.OfficeAssignment))
             {
-                if (string.IsNullOrWhiteSpace(instructorToUpdate.OfficeAssignment?.Location))
+                if (String.IsNullOrWhiteSpace(instructorToUpdate.OfficeAssignment?.Location))
                 {
                     instructorToUpdate.OfficeAssignment = null;
                 }
@@ -144,18 +144,18 @@ namespace ContosoUniversityTARpe21.Controllers
                 {
                     await _context.SaveChangesAsync();
                 }
-                catch (DbUpdateException)
+                catch (DbUpdateException ex )
                 {
+                    
                     ModelState.AddModelError("", "Unable to save changes. " +
-                            "Try Again, and if the problem persists, " +
-                            "see your system administrator.");
+                        "Try again, and if the problem persists, " +
+                        "see your system administrator.");
                 }
                 return RedirectToAction(nameof(Index));
             }
             UpdateInstructorCourses(selectedCourses, instructorToUpdate);
             PopulateAssignedCourseData(instructorToUpdate);
-
-            return View();
+            return View(instructorToUpdate);
 
         }
         [HttpGet]
